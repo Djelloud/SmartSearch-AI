@@ -1,0 +1,103 @@
+[
+  {
+    "id": "PROD001",
+    "name": "Wireless Bluetooth Headphones",
+    "description": "Premium noise-cancelling over-ear headphones with 30-hour battery life and superior sound quality",
+    "category": "Electronics",
+    "price": 149.99,
+    "brand": "TechSound",
+    "rating": 4.5,
+    "stock": 50
+  },
+  {
+    "id": "PROD002",
+    "name": "Smart Fitness Watch",
+    "description": "Advanced fitness tracker with heart rate monitoring, GPS, and sleep tracking capabilities",
+    "category": "Wearables",
+    "price": 199.99,
+    "brand": "FitTech",
+    "rating": 4.7,
+    "stock": 75
+  },
+  {
+    "id": "PROD003",
+    "name": "4K Ultra HD Smart TV 55-inch",
+    "description": "Immersive smart television with HDR10, voice control, and built-in streaming apps",
+    "category": "Electronics",
+    "price": 599.99,
+    "brand": "VisionMax",
+    "rating": 4.6,
+    "stock": 32
+  },
+  {
+    "id": "PROD004",
+    "name": "Ergonomic Office Chair",
+    "description": "Adjustable mesh office chair with lumbar support and breathable design",
+    "category": "Furniture",
+    "price": 229.99,
+    "brand": "ComfortSeat",
+    "rating": 4.4,
+    "stock": 120
+  },
+  {
+    "id": "PROD005",
+    "name": "Gaming Mechanical Keyboard",
+    "description": "RGB backlit mechanical keyboard with programmable keys and fast response switches",
+    "category": "Computers",
+    "price": 89.99,
+    "brand": "KeyMaster",
+    "rating": 4.8,
+    "stock": 80
+  },
+
+  {
+    "id": "PROD096",
+    "name": "Smart Door Lock WiFi Enabled",
+    "description": "Keyless entry smart door lock with fingerprint recognition and mobile app control",
+    "category": "Smart Home",
+    "price": 179.99,
+    "brand": "SecureHome",
+    "rating": 4.6,
+    "stock": 70
+  },
+  {
+    "id": "PROD097",
+    "name": "Outdoor Camping Tent 4-Person",
+    "description": "Waterproof and windproof family camping tent with quick setup design",
+    "category": "Outdoors",
+    "price": 229.99,
+    "brand": "CampPro",
+    "rating": 4.7,
+    "stock": 55
+  },
+  {
+    "id": "PROD098",
+    "name": "Yoga Mat Non-Slip Extra Thick",
+    "description": "Eco-friendly yoga mat with 10mm cushioning and carrying strap",
+    "category": "Sports",
+    "price": 49.99,
+    "brand": "ZenFlex",
+    "rating": 4.8,
+    "stock": 85
+  },
+  {
+    "id": "PROD099",
+    "name": "Digital Drawing Tablet 12-inch",
+    "description": "Graphics tablet with stylus pen, pressure sensitivity, and USB-C connectivity",
+    "category": "Computers",
+    "price": 159.99,
+    "brand": "Artify",
+    "rating": 4.6,
+    "stock": 60
+  },
+  {
+    "id": "PROD100",
+    "name": "Smart Air Purifier HEPA Filter",
+    "description": "WiFi-enabled air purifier with HEPA filter, app control, and real-time air quality monitoring",
+    "category": "Appliances",
+    "price": 199.99,
+    "brand": "PureBreathe",
+    "rating": 4.7,
+    "stock": 75
+  }
+]
