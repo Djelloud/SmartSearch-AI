@@ -29,12 +29,12 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
@@ -49,6 +49,9 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smartsearch
         run: |
           cd backend
+          # Install PostgreSQL client tools
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
           # Wait for database to be ready
           until pg_isready -h localhost -p 5432 -U postgres; do sleep 1; done
           # Initialize database (adjust these commands based on your setup)
@@ -79,7 +82,7 @@ jobs:
           python3 run_tests.py --environment staging --advanced
           
       - name: Upload test reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-reports
@@ -117,7 +120,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           
