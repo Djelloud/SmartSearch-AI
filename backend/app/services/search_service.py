@@ -83,12 +83,27 @@ class SearchService:
             return []
     
     async def initialize_vector_store(self, products: List[dict]):
-        """
-        Initialize and populate Pinecone vector store
-        """
-        # TODO: 
-        # 1. Connect to Pinecone
-        # 2. Create index if not exists
-        # 3. Generate embeddings for all products
-        # 4. Upload to Pinecone
+
         pass
+    async def get_similar(self, product_id: str, limit: int = 5) -> List[SearchResult]:
+        """Get similar products based on product ID"""
+        try:
+            # Get the product from database
+            # For now, simulate by getting product embedding
+            results = self.vector_store.search(product_id, limit + 1)
+            
+            # Filter out the original product
+            search_results = []
+            for doc, score in results:
+                if doc.metadata.get('id') != product_id:
+                    similarity_score = 1 / (1 + score)
+                    product = Product(**doc.metadata)
+                    search_results.append(SearchResult(
+                        product=product,
+                        score=similarity_score
+                    ))
+            
+            return search_results[:limit]
+        except Exception as e:
+            logger.error(f"Recommendations error: {str(e)}")
+            return []

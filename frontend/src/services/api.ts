@@ -10,6 +10,13 @@ const api = axios.create({
   },
 });
 
+interface SearchFilters {
+  category?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  minRating?: string;
+}
+
 export const productApi = {
   // Get all products
   getAllProducts: async (skip = 0, limit = 20): Promise<Product[]> => {
@@ -29,9 +36,23 @@ export const productApi = {
     return response.data;
   },
 
-  // Semantic search
-  search: async (query: string, limit = 10): Promise<SearchResponse> => {
-    const response = await api.post('/search', { query, limit });
+  // Semantic search with filters
+  search: async (query: string, limit = 10, filters: SearchFilters = {}): Promise<SearchResponse> => {
+    const params = new URLSearchParams({
+      query,
+      limit: limit.toString()
+    });
+
+    // Add filters to query params
+    if (filters.category) params.append('category', filters.category);
+    if (filters.minPrice) params.append('min_price', filters.minPrice);
+    if (filters.maxPrice) params.append('max_price', filters.maxPrice);
+    if (filters.minRating) params.append('min_rating', filters.minRating);
+
+    const response = await api.post(`/search?${params.toString()}`, { 
+      query, 
+      limit 
+    });
     return response.data;
   },
 
