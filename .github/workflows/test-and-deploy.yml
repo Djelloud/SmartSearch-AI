@@ -143,26 +143,7 @@ jobs:
           # Display test summary in logs
           if [ -f "comprehensive_test_results.json" ]; then
             echo "📋 Test Results Summary:"
-            cat comprehensive_test_results.json | python3 -c "
-import json, sys
-try:
-    data = json.load(sys.stdin)
-    pass_rate = data.get('pass_rate', 0) * 100
-    total = data.get('total_tests', 0)
-    passed = data.get('passed', 0)
-    failed = data.get('failed', 0)
-    
-    status = '✅' if data.get('pass_rate', 0) >= 0.75 else '❌'
-    print(f'{status} Pass Rate: {pass_rate:.1f}%')
-    print(f'📊 Tests: {total} total, {passed} passed, {failed} failed')
-    
-    if data.get('pass_rate', 0) >= 0.75:
-        print('🎉 Quality gates passed!')
-    else:
-        print('⚠️  Below quality threshold')
-except:
-    print('❌ Could not parse test results')
-            "
+            python3 -c "import json; data=json.load(open('comprehensive_test_results.json')); pr=data.get('pass_rate',0)*100; print(f\"{'✅' if data.get('pass_rate',0)>=0.75 else '❌'} Pass Rate: {pr:.1f}%\"); print(f\"📊 Tests: {data.get('total_tests',0)} total, {data.get('passed',0)} passed, {data.get('failed',0)} failed\"); print('🎉 Quality gates passed!' if data.get('pass_rate',0)>=0.75 else '⚠️ Below quality threshold')" || echo "❌ Could not parse test results"
           fi
           
           # Return original exit code for CI decision
