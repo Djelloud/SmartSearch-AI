@@ -1,0 +1,3 @@
+"""
+SmartSearch-AI Backend Application
+"""

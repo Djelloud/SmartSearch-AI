@@ -1,0 +1,29 @@
+# Multi-stage Dockerfile for testing SmartSearch-AI
+FROM python:3.10-slim as test-base
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy requirements and install Python dependencies
+COPY backend/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend code
+COPY backend/ ./
+
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash testuser && \
+    chown -R testuser:testuser /app
+USER testuser
+
+# Default command runs tests
+CMD ["python3", "run_tests.py", "--environment", "staging", "--advanced"]
+
+# Alternative commands:
+# docker run smartsearch-tests python3 run_tests.py --environment production --advanced
+# docker run smartsearch-tests python3 test_basic.py

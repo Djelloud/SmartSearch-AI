@@ -1,0 +1,143 @@
+name: SmartSearch-AI CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: ankane/pgvector
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: smartsearch
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          
+      - name: Set up database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smartsearch
+        run: |
+          cd backend
+          # Wait for database to be ready
+          until pg_isready -h localhost -p 5432 -U postgres; do sleep 1; done
+          # Initialize database (adjust these commands based on your setup)
+          python3 -c "
+          import os
+          import asyncio
+          from app.services.vector_store_service import VectorStoreService
+          from app.config import get_settings
+          
+          async def init_db():
+              settings = get_settings()
+              vs = VectorStoreService()
+              print('Database initialized successfully')
+          
+          asyncio.run(init_db())
+          "
+          # Upload sample products if script exists
+          if [ -f "scripts/upload_products.py" ]; then
+            python3 scripts/upload_products.py
+          fi
+          
+      - name: Run semantic search tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smartsearch
+          USE_LOCAL_EMBEDDINGS: "true"
+        run: |
+          cd backend
+          python3 run_tests.py --environment staging --advanced
+          
+      - name: Upload test reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-reports
+          path: |
+            backend/test_report.html
+            backend/comprehensive_test_results.json
+            backend/test_results.xml
+            
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Semantic Search Tests
+          path: backend/test_results.xml
+          reporter: java-junit
+
+  deploy-staging:
+    needs: test
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Deploy to Staging
+        run: |
+          echo "🚀 Deploying to staging environment"
+          echo "Pass rate: $(cat backend/comprehensive_test_results.json | jq '.pass_rate')"
+          # Add your staging deployment commands here
+          
+  deploy-production:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          
+      - name: Run production-level tests
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          cd backend
+          python3 run_tests.py --environment production --advanced
+          
+      - name: Deploy to Production
+        if: success()
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        run: |
+          echo "🎉 Deploying to production!"
+          echo "All quality gates passed ✅"
+          # Add your production deployment commands here

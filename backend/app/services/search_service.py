@@ -31,7 +31,8 @@ class SearchService:
             for doc, distance in results:
                 # pgvector returns distance (lower is better)
                 # Convert to similarity score (0-1, higher is better)
-                similarity_score = 1 - distance
+                # Use exponential decay to ensure positive scores
+                similarity_score = max(0.0, min(1.0, 1 / (1 + distance)))
                 
                 # Extract product from metadata
                 product_data = doc.metadata
