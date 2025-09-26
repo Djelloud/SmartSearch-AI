@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+# Required permissions for test reporting
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -134,6 +140,31 @@ jobs:
           echo "📊 Test execution completed with exit code: $TEST_EXIT_CODE"
           ls -la *.xml *.html *.json || true
           
+          # Display test summary in logs
+          if [ -f "comprehensive_test_results.json" ]; then
+            echo "📋 Test Results Summary:"
+            cat comprehensive_test_results.json | python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+    pass_rate = data.get('pass_rate', 0) * 100
+    total = data.get('total_tests', 0)
+    passed = data.get('passed', 0)
+    failed = data.get('failed', 0)
+    
+    status = '✅' if data.get('pass_rate', 0) >= 0.75 else '❌'
+    print(f'{status} Pass Rate: {pass_rate:.1f}%')
+    print(f'📊 Tests: {total} total, {passed} passed, {failed} failed')
+    
+    if data.get('pass_rate', 0) >= 0.75:
+        print('🎉 Quality gates passed!')
+    else:
+        print('⚠️  Below quality threshold')
+except:
+    print('❌ Could not parse test results')
+            "
+          fi
+          
           # Return original exit code for CI decision
           exit $TEST_EXIT_CODE
           
@@ -149,11 +180,62 @@ jobs:
             
       - name: Publish test results
         uses: dorny/test-reporter@v1
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         with:
           name: Semantic Search Tests
           path: backend/test_results.xml
           reporter: java-junit
+          fail-on-error: false
+          
+      - name: Comment test results on PR
+        uses: actions/github-script@v7
+        if: always() && github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              // Read test results
+              let testSummary = '## 🧪 Test Results Summary\n\n';
+              
+              if (fs.existsSync('backend/comprehensive_test_results.json')) {
+                const results = JSON.parse(fs.readFileSync('backend/comprehensive_test_results.json', 'utf8'));
+                const passRate = (results.pass_rate * 100).toFixed(1);
+                const status = results.pass_rate >= 0.75 ? '✅' : '❌';
+                
+                testSummary += `${status} **Pass Rate**: ${passRate}%\n`;
+                testSummary += `📊 **Tests**: ${results.total_tests} total, ${results.passed} passed, ${results.failed} failed\n\n`;
+                
+                if (results.pass_rate >= 0.75) {
+                  testSummary += '🎉 All quality gates passed! Ready for staging deployment.\n';
+                } else {
+                  testSummary += '⚠️ Below staging quality threshold (75%). Please review failing tests.\n';
+                }
+              } else {
+                testSummary += '⚠️ Test results file not found. Check the CI logs for details.\n';
+              }
+              
+              // Add link to detailed reports
+              testSummary += '\n📋 **Detailed Reports**: Check the "Artifacts" section for comprehensive test reports.\n';
+              
+              // Comment on PR
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: testSummary
+              });
+              
+            } catch (error) {
+              console.log('Error creating test summary:', error);
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '⚠️ Unable to generate test summary. Check the CI logs for details.'
+              });
+            }
 
   deploy-staging:
     needs: test
