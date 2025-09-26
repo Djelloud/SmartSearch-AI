@@ -247,6 +247,8 @@ jobs:
         run: |
           cd backend
           pip install -r requirements.txt
+          # Install additional test dependencies for production tests
+          pip install psutil
           
       - name: Run production-level tests
         env:
